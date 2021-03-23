@@ -354,6 +354,7 @@ def execute_exp(args=None):
     conv_layers = 10
     model = create_cnn_classifier_network(image_size, nchannels,
                                         conv_size=args.conv_size,
+                                        conv_nfilters=args.conv_nfilters,
                                         filters = 10,
                                         dense_layers=dense_layers,
                                         pool=args.pool,
