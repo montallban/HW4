@@ -143,10 +143,7 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
         print('Train objects:', obj)
         
         # Validation data
-        print(args.experiment_type)
-        print(args.rotation)
         val_list = [(args.rotation+args.Nfolds-1)%args.Nfolds]
-        print(val_list)
         # List of objects
         obj = [objects[c][i] for i in val_list]
         # Load these objects into memory
@@ -213,7 +210,6 @@ def augment_args(args):
     
     # Create parameter sets to execute the experiment on.  This defines the Cartesian product
     #  of experiments that we will be 
-    print(args.experiment_type)
     if args.experiment_type is None:
         return ""
     elif args.experiment_type == "basic":
@@ -309,7 +305,6 @@ def execute_exp(args=None):
     '''
     # Check the arguments
 
-    print("hello")
     if args is None:
         # Case where no args are given (usually, because we are calling from within Jupyter)
         #  In this situation, we just use the default arguments
@@ -318,10 +313,7 @@ def execute_exp(args=None):
         
     # Modify the args in specific situations
     #augment_args(args)
-    print('augmenting args')
-    print(args.experiment_type)
-    print(args.dataset)
-    print(args.exp_index)
+
     args_str = augment_args(args)
     
     # Perform the experiment
@@ -331,7 +323,6 @@ def execute_exp(args=None):
         return
     
     # Load data
-    print("hi")
     ins, outs, ins_validation, outs_validation = load_data_sets(args.dataset, args)
     image_size=(ins.shape[1], ins.shape[2])
     nchannels = ins.shape[3]
@@ -349,12 +340,13 @@ def execute_exp(args=None):
     
     print("Dense layers:", dense_layers)
     print("Conv layers:", conv_layers)
+
     
     # Build network
-    conv_layers = 10
     model = create_cnn_classifier_network(image_size, nchannels,
                                         conv_size=args.conv_size,
                                         conv_nfilters=args.conv_nfilters,
+                                        conv_layers=conv_layers,
                                         filters = 10,
                                         dense_layers=dense_layers,
                                         pool=args.pool,

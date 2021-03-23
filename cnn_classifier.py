@@ -45,6 +45,7 @@ from core50 import *
 def create_cnn_classifier_network(image_size, nchannels,
                                         conv_size,
                                         conv_nfilters,
+                                        conv_layers,
                                         filters,
                                         dense_layers,
                                         pool,
@@ -57,7 +58,13 @@ def create_cnn_classifier_network(image_size, nchannels,
     model.add(InputLayer(input_shape=(image_size[0], image_size[1], nchannels)))
 
 # number of weights is kernel_size = 25+1*10 (5 * (5+1) * 10) + 500 ?
-    for idx, filters in enumerate(conv_nfilters):
+
+    for idx, layer in enumerate(conv_layers):
+        print(layer)
+        filters = layer['filters']
+        kernel_size = layer['kernel_size'] 
+        pool_size = layer['pool_size']
+        strides = layer['strides']
         kernel_size = conv_size[idx]
         name = "C" + str(idx)
         model.add(Convolution2D(filters=filters,
@@ -74,8 +81,10 @@ def create_cnn_classifier_network(image_size, nchannels,
     
     model.add(Flatten())
     
-    for idx, units in enumerate(dense_layers):
+    for idx, layer in enumerate(dense_layers):
+        print(layer)
         name = "D" + str(idx)
+        units = layer['units']
         model.add(Dense(units=units,
                     activation='elu',
                     use_bias=True,
@@ -93,7 +102,7 @@ def create_cnn_classifier_network(image_size, nchannels,
                 bias_initializer='zeros',
                 name='D2',
                 kernel_regularizer=tf.keras.regularizers.l2(lambda_l2)))
-    opt=tf.keras.optimizers.Adam(lr=lr)
+    opt=tf.keras.optimizers.Adam(lr=lrate)
     model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
         
     # there is conv3D for volumetric data
