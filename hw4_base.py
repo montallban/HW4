@@ -319,6 +319,8 @@ def execute_exp(args=None):
     # Modify the args in specific situations
     #augment_args(args)
     print('augmenting args')
+    print(args.experiment_type)
+    print(args.dataset)
     print(args.exp_index)
     args_str = augment_args(args)
     
@@ -349,12 +351,12 @@ def execute_exp(args=None):
     print("Conv layers:", conv_layers)
     
     # Build network
-    conv_layers =10
+    conv_layers = 10
     model = create_cnn_classifier_network(image_size, nchannels,
-                                        conv_layers=conv_layers,
                                         conv_size=args.conv_size,
                                         filters = 10,
                                         dense_layers=dense_layers,
+                                        pool=args.pool,
                                         hidden=args.hidden,
                                         p_dropout=args.dropout,
                                         lambda_l2=args.L2_regularizer,
