@@ -44,7 +44,7 @@ from core50 import *
 
 def create_cnn_classifier_network(image_size, nchannels,
                                         conv_size,
-                                        conv_nfilter,
+                                        conv_nfilters,
                                         filters,
                                         dense_layers,
                                         pool,
