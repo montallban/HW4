@@ -43,10 +43,10 @@ from core50 import *
 #                                         lrate=self.lrate, self.n_classes=3):
 
 def create_cnn_classifier_network(image_size, nchannels,
-                                        conv_layers,
                                         conv_size,
                                         filters,
                                         dense_layers,
+                                        pool,
                                         hidden,
                                         p_dropout,
                                         lambda_l2,
@@ -56,10 +56,11 @@ def create_cnn_classifier_network(image_size, nchannels,
     model.add(InputLayer(input_shape=(image_size[0], image_size[1], nchannels)))
 
 # number of weights is kernel_size = 25+1*10 (5 * (5+1) * 10) + 500 ?
-    for idx, conv_layer in enumerate(conv_layers):
+    for idx, filters in enumerate(conv_nfilters):
+        kernel_size = conv_size[idx]
         name = "C" + str(idx)
         model.add(Convolution2D(filters=filters,
-                            kernel_size=(5,5),
+                            kernel_size=kernel_size,
                             strides=1,
                             padding='valid',
                             kernel_initializer='random_uniform',
@@ -68,13 +69,12 @@ def create_cnn_classifier_network(image_size, nchannels,
                             activation='elu',
                             kernel_regularizer=tf.keras.regularizers.l2(lambda_l2)))
 
-    model.add(MaxPooling2D(pool_size=(2,2), strides=(2,2))) # reduce dimensionality at a minimum amount
+        model.add(MaxPooling2D(pool_size=(pool[idx],pool[idx]), strides=(2,2))) # reduce dimensionality at a minimum amount
     
     model.add(Flatten())
     
-    for idx, dense_layer in enumerate(dense_layers):
+    for idx, units in enumerate(dense_layers):
         name = "D" + str(idx)
-        units = hidden[idx]
         model.add(Dense(units=units,
                     activation='elu',
                     use_bias=True,
