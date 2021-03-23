@@ -5,13 +5,13 @@
 # memory in MB
 #SBATCH --mem=1024
 # The %04a is translated into a 4-digit number that encodes the SLURM_ARRAY_TASK_ID
-#SBATCH --output=results2/bmi_shoulder_l1_%04a_stdout.txt
-#SBATCH --error=results2/error_bmi_shoulder_l1__%04a_.txt
+#SBATCH --output=results_hw4/output_core_%04a_stdout.txt
+#SBATCH --error=results2/error_core_%04a_.txt
 #SBATCH --time=12:00:00
-#SBATCH --job-name=bmi_l1_reg
+#SBATCH --job-name=core
 #SBATCH --mail-user=michael.montalbano@ou.edu
 #SBATCH --mail-type=ALL
-#SBATCH --chdir=/home/mcmontalbano/HW3
+#SBATCH --chdir=/home/mcmontalbano/HW4
 #SBATCH --array=0-5
 #
 #################################################
