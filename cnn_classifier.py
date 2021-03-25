@@ -138,14 +138,14 @@ def create_deep_cnn_classifier_network(image_size, nchannels,
 
 # number of weights is kernel_size = 25+1*10 (5 * (5+1) * 10) + 500 ?
 
+    i = 0
     for idx, layer in enumerate(conv_layers):
-        print(layer)
         filters = layer['filters']
         kernel_size = layer['kernel_size'] 
         pool_size = layer['pool_size']
         strides = layer['strides']
         kernel_size = conv_size[idx]
-        name = "C" + str(idx)
+        name = "C" + str(i)
         model.add(Convolution2D(filters=filters,
                             kernel_size=kernel_size,
                             strides=1,
@@ -155,7 +155,9 @@ def create_deep_cnn_classifier_network(image_size, nchannels,
                             name=name,
                             activation='elu',
                             kernel_regularizer=tf.keras.regularizers.l2(lambda_l2)))
-
+        
+        i = i + 1
+        name = "C" + str(i)
         
         # Next, we add an identical conv layer 
         model.add(Convolution2D(filters=filters,
@@ -169,7 +171,8 @@ def create_deep_cnn_classifier_network(image_size, nchannels,
                             kernel_regularizer=tf.keras.regularizers.l2(lambda_l2)))
 
         model.add(MaxPooling2D(pool_size=(pool[idx],pool[idx]), strides=(2,2))) # reduce dimensionality at a minimum amount
-    
+        i = i + 1
+
     model.add(Flatten())
     
     for idx, layer in enumerate(dense_layers):
