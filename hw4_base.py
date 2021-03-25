@@ -95,15 +95,7 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
     :param file_spec: The file pattern to match
     :return ins_train, outs_train, ins_val, outs_val
     '''
-    # if objects is None:
-    #     objects = [['o11'],['o15']]
-
-    # if condition_list is None:
-    #     condition_list= ['s1', 's2']
-        
-    # if file_spec is None:
-    #     file_spec = '.*[0].png'
-        
+      
 
     
     
@@ -167,24 +159,25 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
 def create_parser():
     # Parse the command-line arguments
     parser = argparse.ArgumentParser(description='BMI Learner', fromfile_prefix_chars='@')
+    parser.add_argument('-network',type=str,default='shallow',help="Choose shallow or deep")
     parser.add_argument('-rotation', type=int, default=0, help='Cross-validation rotation')
     parser.add_argument('-epochs', type=int, default=100, help='Training epochs')
     parser.add_argument('-dataset', type=str, default=r"C:\Users\User\AML\HW4\core50\core50_128x128", help='Data set directory')
     parser.add_argument('-Ntraining', type=int, default=4, help='Number of training folds')
-    parser.add_argument('-exp_index', type=int, default=-1, help='Experiment index')
+    parser.add_argument('-exp_index', type=int, default=0, help='Experiment index')
     parser.add_argument('-Nfolds', type=int, default=5, help='Maximum number of folds')
     parser.add_argument('-results_path', type=str, default='./results_hw4', help='Results directory')
     parser.add_argument('-hidden', nargs='+', type=int, default=[100, 5], help='Number of hidden units per layer (sequence of ints)')
     parser.add_argument('-conv_size', nargs='+', type=int, default=[3,5], help='Convolution filter size per layer (sequence of ints)')
     parser.add_argument('-conv_nfilters', nargs='+', type=int, default=[10,15], help='Convolution filters per layer (sequence of ints)')
     parser.add_argument('-pool', nargs='+', type=int, default=[2,2], help='Max pooling size (1=None)')
-    parser.add_argument('-dropout', type=float, default=None, help='Dropout rate')
+    parser.add_argument('-dropout', type=float, default=0.1, help='Dropout rate')
     parser.add_argument('-lrate', type=float, default=0.001, help="Learning rate")
     parser.add_argument('-L2_regularizer', '-l2', type=float, default=None, help="L2 regularization parameter")
     parser.add_argument('-min_delta', type=float, default=0.0, help="Minimum delta for early termination")
     parser.add_argument('-patience', type=int, default=100, help="Patience for early termination")
     parser.add_argument('-verbose', '-v', action='count', default=0, help="Verbosity level")
-    parser.add_argument('-experiment_type', type=str, default="basic", help="Experiment type")
+    parser.add_argument('-experiment_type', type=str, default="deep", help="Experiment type")
     parser.add_argument('-nogo', action='store_true', help='Do not perform the experiment')
     parser.add_argument('-batch', type=int, default=10, help="Training set batch size")
     
@@ -215,6 +208,10 @@ def augment_args(args):
     elif args.experiment_type == "basic":
         print("basic")
         p = {'rotation': range(5)}
+    elif args.experiment_type == "test":
+        print("test")
+        p = {'L2_regularizer': [None, 0.0001, 0.001, 0.005, 0.01],
+             'rotation': range(5)}
     else:
         assert False, "Bad experiment type"
         
@@ -343,18 +340,32 @@ def execute_exp(args=None):
 
     
     # Build network
-    model = create_cnn_classifier_network(image_size, nchannels,
-                                        conv_size=args.conv_size,
-                                        conv_nfilters=args.conv_nfilters,
-                                        conv_layers=conv_layers,
-                                        filters = 10,
-                                        dense_layers=dense_layers,
-                                        pool=args.pool,
-                                        hidden=args.hidden,
-                                        p_dropout=args.dropout,
-                                        lambda_l2=args.L2_regularizer,
-                                        lrate=args.lrate, n_classes=3)
-    
+    if args.network == "shallow":
+        model = create_cnn_classifier_network(image_size, nchannels,
+                                            conv_size=args.conv_size,
+                                            conv_nfilters=args.conv_nfilters,
+                                            conv_layers=conv_layers,
+                                            filters = 10,
+                                            dense_layers=dense_layers,
+                                            pool=args.pool,
+                                            hidden=args.hidden,
+                                            p_dropout=args.dropout,
+                                            lambda_l2=args.L2_regularizer,
+                                            lrate=args.lrate, n_classes=3)
+                                            
+    elif args.network == "deep":
+                model = create_deep_cnn_classifier_network(image_size, nchannels,
+                                            conv_size=args.conv_size,
+                                            conv_nfilters=args.conv_nfilters,
+                                            conv_layers=conv_layers,
+                                            filters = 10,
+                                            dense_layers=dense_layers,
+                                            pool=args.pool,
+                                            hidden=args.hidden,
+                                            p_dropout=args.dropout,
+                                            lambda_l2=args.L2_regularizer,
+                                            lrate=args.lrate, n_classes=3)
+        
     # Report if verbosity is turned on
     if args.verbose >= 1:
         print(model.summary())
