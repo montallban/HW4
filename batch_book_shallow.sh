@@ -18,4 +18,4 @@
 # Do not change this line unless you have your own python/tensorflow/keras set up
 source ~fagg/pythonenv/tensorflow/bin/activate
 
-python hw4_base.py  -conv_size  7 3 3 -conv_nfilters 64 128 256 -hidden 128 64 -dropout 0.5 -exp_index $SLURM_ARRAY_TASK_ID -epochs 1000 -L2_regularizer 0.01 -experiment_type 'testing' -dataset '/home/fagg/datasets/core50/core50_128x128' 
+python hw4_base.py  -conv_size  7 3 3 -conv_nfilters 64 128 256 -hidden 128 64 -dropout 0.5 -exp_index $SLURM_ARRAY_TASK_ID -epochs 1000 -L2_regularizer 0.01 -experiment_type 'basic' -dataset '/home/fagg/datasets/core50/core50_128x128' 
