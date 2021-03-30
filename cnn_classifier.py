@@ -7,8 +7,10 @@ import fnmatch
 import matplotlib.pyplot as plt
 
 from tensorflow import keras
-from tensorflow.keras.layers import InputLayer
+from tensorflow.keras.layers import InputLayer, Input
 from tensorflow.keras.layers import Convolution2D, Dense, MaxPooling2D, Flatten, BatchNormalization, Dropout
+from keras.models import Model
+from keras.layers.merge import concatenate
 from tensorflow.keras import Sequential
 import random
 import re
@@ -21,26 +23,7 @@ import re
 import numpy as np
 from core50 import *
 
-# class CNN_Classifier():
-#     def __init__(self, self.image_size, self.nchannels,
-#                 self.conv_layers=conv_layers,
-#                 self.conv_size=args.conv_size,
-#                 self.filters=args.conv_nfilters,
-#                 self.dense_layers=dense_layers,
-#                 hidden=args.hidden,
-#                 self.p_dropout=args.dropout,
-#                 self.lambda_l2=args.L2_regularizer,
-#                 self.lrate=args.lrate, n_classes=3):
 
-# def create_cnn_classifier_network(self.image_size, self.nchannels,
-#                                         conv_layers=self.conv_layers,
-#                                         conv_size=self.conv_size,
-#                                         filters=self.conv_nfilters,
-#                                         dense_layers=self.dense_layers,
-#                                         hidden=self.hidden,
-#                                         p_dropout=self.dropout,
-#                                         lambda_l2=self.L2_regularizer,
-#                                         lrate=self.lrate, self.n_classes=3):
 
 def create_cnn_classifier_network(image_size, nchannels,
                                         conv_size,
@@ -205,3 +188,93 @@ def create_deep_cnn_classifier_network(image_size, nchannels,
     print(model.summary())
     
     return model
+
+def create_inception_network(image_size, n_channels,
+                              lambda_regularization, activation='elu'):
+
+
+    input_tensor = Input(shape=(image_size[0], image_size[1], n_channels),name="input")
+
+    i1_tensor = inception_module(input_tensor, (10, (10,10), (10,10), 10), activation,
+                                                    lambda_regularization, name="i1")
+
+    i2_tensor = inception_module(i1_tensor, (10, (10,10), (10,10), 10), activation,
+                                                    lambda_regularization, name="i2")
+                                                
+    flatten_tensor = Flatten()(i2_tensor)
+                                 
+    dense1_tensor = Dense(units=100, activation=activation, name = "D1") (flatten_tensor)
+    dense2_tensor = Dense(units=20, activation=activation, name = "D2") (dense1_tensor)
+    output_tensor = Dense(units=3, activation='sigmoid', name = "output") (dense2_tensor)
+
+    opt = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999,
+                                epsilon=None, decay=0.0, amsgrad=False)
+
+    model = Model(inputs=input_tensor, outputs=output_tensor)
+
+    #loss_fn = keras.losses.SparseCategoricalCrossentropy()
+    model.compile(loss='categorical_crossentropy', optimizer = opt,
+                    metrics=['accuracy'])
+
+    print(model.summary())
+    return model
+
+
+def inception_module(input_tensor, nfilters, activation, lambda_regularization, name):
+
+    convA_tensor = Convolution2D(filters=nfilters[0],
+                                  kernel_size=(1,1),
+                                  strides=(2,2),    # reduces dimensionality by 2
+                                  padding='same',
+                                  name = 'convA'+name) (input_tensor)
+                                  
+    convB0_tensor = Convolution2D(filters=nfilters[1][0],
+                                    kernel_size=(1,1),
+                                    strides=(1,1),
+                                    padding='same',
+                                    name = 'convB0'+name) (input_tensor)
+                                
+    convB1_tensor = Convolution2D(filters=nfilters[1][1],
+                                    kernel_size=(3,3),
+                                    strides=(2,2),  # reduces dimensionality by 2
+                                    padding='same',
+                                    name = 'convB1'+name) (convB0_tensor)
+
+    convC0_tensor = Convolution2D(filters=nfilters[2][0],
+                                    kernel_size=(1,1),
+                                    strides=(1,1),
+                                    padding='same',
+                                    name = 'convC0'+name) (input_tensor)
+
+    convC1_tensor = Convolution2D(filters=nfilters[2][1],
+                                    kernel_size=(5,5),
+                                    strides=(2,2),  # reduces dimensionality by 2
+                                    padding='same',
+                                    name = 'convC1'+name) (convC0_tensor)
+
+
+    max_tensor = MaxPooling2D(pool_size=(3,3),
+                              strides=(1,1),
+                              name='MAX_'+name,
+                              padding='same')(input_tensor)
+
+    convD1_tensor = Convolution2D(filters=nfilters[3],
+                                    kernel_size=(1,1),
+                                    strides=(2,2),  # reduces dimensionality by 2
+                                    padding='same',
+                                    name = 'convD0'+name) (max_tensor)
+
+    output_tensor = concatenate([convA_tensor, convB1_tensor, convC1_tensor, convD1_tensor])
+        
+    return output_tensor
+
+def create_multiple():
+
+    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels),
+                            name="input1")
+
+    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels),
+                            name="input2")        
+
+    model = Model(ipnuts=[input_tensor1, input_tensor2],
+                                        outputs=output_tensor)            

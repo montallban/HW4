@@ -71,6 +71,8 @@ from core50 import *
 import argparse
 import pickle
 
+tf.config.threading.set_intra_op_parallelism_threads(8)
+
 #################################################################
 # Default plotting parameters
 FIGURESIZE=(10,6)
@@ -159,7 +161,7 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
 def create_parser():
     # Parse the command-line arguments
     parser = argparse.ArgumentParser(description='BMI Learner', fromfile_prefix_chars='@')
-    parser.add_argument('-network',type=str,default='shallow',help="Choose shallow or deep")
+    parser.add_argument('-network',type=str,default='inception',help="Choose shallow, deep, or inception")
     parser.add_argument('-rotation', type=int, default=0, help='Cross-validation rotation')
     parser.add_argument('-epochs', type=int, default=100, help='Training epochs')
     parser.add_argument('-dataset', type=str, default=r"C:\Users\User\AML\HW4\core50\core50_128x128", help='Data set directory')
@@ -177,7 +179,7 @@ def create_parser():
     parser.add_argument('-min_delta', type=float, default=0.0, help="Minimum delta for early termination")
     parser.add_argument('-patience', type=int, default=100, help="Patience for early termination")
     parser.add_argument('-verbose', '-v', action='count', default=0, help="Verbosity level")
-    parser.add_argument('-experiment_type', type=str, default="deep", help="Experiment type")
+    parser.add_argument('-experiment_type', type=str, default="basic", help="Experiment type")
     parser.add_argument('-nogo', action='store_true', help='Do not perform the experiment')
     parser.add_argument('-batch', type=int, default=10, help="Training set batch size")
     
@@ -354,7 +356,7 @@ def execute_exp(args=None):
                                             lrate=args.lrate, n_classes=3)
                                             
     elif args.network == "deep":
-                model = create_deep_cnn_classifier_network(image_size, nchannels,
+        model = create_deep_cnn_classifier_network(image_size, nchannels,
                                             conv_size=args.conv_size,
                                             conv_nfilters=args.conv_nfilters,
                                             conv_layers=conv_layers,
@@ -365,6 +367,10 @@ def execute_exp(args=None):
                                             p_dropout=args.dropout,
                                             lambda_l2=args.L2_regularizer,
                                             lrate=args.lrate, n_classes=3)
+
+    elif args.network == "inception":
+        model = create_inception_network(image_size, nchannels,
+                                          lambda_regularization=args.L2_regularizer)
         
     # Report if verbosity is turned on
     if args.verbose >= 1:
@@ -388,6 +394,8 @@ def execute_exp(args=None):
                         verbose=args.verbose>=2,
                         validation_data=(ins_validation, outs_validation), 
                         callbacks=[early_stopping_cb])
+
+    
     
     # Generate log data
     results = {}
