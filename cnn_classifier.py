@@ -200,8 +200,14 @@ def create_inception_network(image_size, n_channels,
 
     i2_tensor = inception_module(i1_tensor, (10, (10,10), (10,10), 10), activation,
                                                     lambda_regularization, name="i2")
+
+    i3_tensor = inception_module(i2_tensor, (10, (10,10), (10,10), 10), activation,
+                                                    lambda_regularization, name="i3")
                                                 
-    flatten_tensor = Flatten()(i2_tensor)
+    i4_tensor = inception_module(i3_tensor, (10, (10,10), (10,10), 10), activation,
+                                                    lambda_regularization, name="i4")
+                                                
+    flatten_tensor = Flatten()(i4_tensor)
                                  
     dense1_tensor = Dense(units=100, activation=activation, name = "D1") (flatten_tensor)
     dense2_tensor = Dense(units=20, activation=activation, name = "D2") (dense1_tensor)
