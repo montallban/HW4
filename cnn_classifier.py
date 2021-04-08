@@ -7,10 +7,9 @@ import fnmatch
 import matplotlib.pyplot as plt
 
 from tensorflow import keras
-from tensorflow.keras.layers import InputLayer, Input
+from tensorflow.keras.layers import InputLayer, Input, Concatenate
 from tensorflow.keras.layers import Convolution2D, Dense, MaxPooling2D, Flatten, BatchNormalization, Dropout
-from keras.models import Model
-from keras.layers.merge import concatenate
+from tensorflow.keras.models import Model
 from tensorflow.keras import Sequential
 import random
 import re
@@ -22,6 +21,7 @@ import fnmatch
 import re
 import numpy as np
 from core50 import *
+import sys
 
 
 
@@ -189,38 +189,48 @@ def create_deep_cnn_classifier_network(image_size, nchannels,
     
     return model
 
-def create_inception_network(image_size, n_channels,
+def create_inception_network(image_size, modules, n_channels, filters,
                               lambda_regularization, activation='elu'):
+    # Creates 4 layers of inception modules
 
 
-    input_tensor = Input(shape=(image_size[0], image_size[1], n_channels),name="input")
+    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels),
+                                                                name="input_1")
 
-    i1_tensor = inception_module(input_tensor, (10, (10,10), (10,10), 10), activation,
-                                                    lambda_regularization, name="i1")
+    # for idx, i in enumerate(modules):
+    #     name = "i" + str(idx)
+    #     tensor = inception_module(input_tensor, filters, activation,
+    #                                                 lambda_regularization, name=name)
 
-    i2_tensor = inception_module(i1_tensor, (10, (10,10), (10,10), 10), activation,
+    i2_tensor = inception_module(input_tensor1, filters, activation,
+                                                lambda_regularization, name="i1")
+
+
+    i2_tensor = inception_module(i1_tensor, filters, activation,
                                                     lambda_regularization, name="i2")
 
-    i3_tensor = inception_module(i2_tensor, (10, (10,10), (10,10), 10), activation,
+    i3_tensor = inception_module(i2_tensor, filters, activation,
                                                     lambda_regularization, name="i3")
                                                 
-    i4_tensor = inception_module(i3_tensor, (10, (10,10), (10,10), 10), activation,
+    i4_tensor = inception_module(i3_tensor, filters, activation,
                                                     lambda_regularization, name="i4")
                                                 
+    # The final inception module is flattened
     flatten_tensor = Flatten()(i4_tensor)
                                  
+    # Then this is sent through 2 dense layers before outputting using the softmax activation function
     dense1_tensor = Dense(units=100, activation=activation, name = "D1") (flatten_tensor)
     dense2_tensor = Dense(units=20, activation=activation, name = "D2") (dense1_tensor)
-    output_tensor = Dense(units=3, activation='sigmoid', name = "output") (dense2_tensor)
+    output_tensor = Dense(units=3, activation='softmax', name = "output") (dense2_tensor)
 
     opt = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999,
                                 epsilon=None, decay=0.0, amsgrad=False)
 
-    model = Model(inputs=input_tensor, outputs=output_tensor)
+    model = Model(inputs=input_tensor1, outputs=output_tensor)
 
     #loss_fn = keras.losses.SparseCategoricalCrossentropy()
     model.compile(loss='categorical_crossentropy', optimizer = opt,
-                    metrics=['accuracy'])
+                    metrics=['categorical_accuracy'])
 
     print(model.summary())
     return model
@@ -270,17 +280,60 @@ def inception_module(input_tensor, nfilters, activation, lambda_regularization, 
                                     padding='same',
                                     name = 'convD0'+name) (max_tensor)
 
-    output_tensor = concatenate([convA_tensor, convB1_tensor, convC1_tensor, convD1_tensor])
+    # Concatenate the output of all 'lines' through the inception module
+    output_tensor = Concatenate()([convA_tensor, convB1_tensor, convC1_tensor, convD1_tensor])
         
     return output_tensor
 
-def create_multiple():
+def create_dual_input_network(image_size, n_channels, filters, 
+                                lambda_regularization, activation='elu'):
+
+    # Create an instance of the inception model
+    inception_model = create_inception_subnetwork(image_size, n_channels, filters,
+                                                    lambda_regularization, activation)
+
+    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels), name="input_1")
+
+    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels), name="input_2")
+
+    # Use the model twice
+    dense1 = inception_model(input_tensor1)
+    dense2 = inception_model(input_tensor2)
+    
+    # Combine the outputs
+    concatenation_tensor = Concatenate()([dense1, dense2])
+
+    dense3_tensor = Dense(units=20, name = "D3")(concatenation_tensor)
+
+    output_tensor = Dense(units=3, activation='softmax', name = "output")(dense3_tensor)
+
+    opt = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999,
+                                    epsilon=None, decay=0.0, amsgrad=False)
+
+    # Build the object model
+    model = Model(inputs=[input_tensor1, input_tensor2], outputs=output_tensor)
+    
+    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['categorical_accuracy'])
+    
+    return model
+
+
+def create_inception_subnetwork(image_size, n_channels, filters, 
+                                    lambda_regularization, activation='elu'):
 
     input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels),
-                            name="input1")
+                                                                name="input_1")
 
-    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels),
-                            name="input2")        
+    i1_tensor = inception_module(input_tensor1, filters, activation,
+                                                    lambda_regularization, name="i1")
 
-    model = Model(ipnuts=[input_tensor1, input_tensor2],
-                                        outputs=output_tensor)            
+    i2_tensor = inception_module(i1_tensor, filters, activation,
+                                                    lambda_regularization, name="i2")     
+
+    flatten_tensor = Flatten()(i2_tensor)
+    
+    dense1_tensor = Dense(units=100, name = "D1") (flatten_tensor)
+
+    model = Model(inputs=input_tensor1, outputs=dense1_tensor)
+    
+    return model
