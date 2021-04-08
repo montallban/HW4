@@ -189,7 +189,7 @@ def create_deep_cnn_classifier_network(image_size, nchannels,
     
     return model
 
-def create_inception_network(image_size, modules, n_channels, filters,
+def create_inception_network(image_size, n_channels, filters,
                               lambda_regularization, activation='elu'):
     # Creates 4 layers of inception modules
 
@@ -197,14 +197,8 @@ def create_inception_network(image_size, modules, n_channels, filters,
     input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels),
                                                                 name="input_1")
 
-    # for idx, i in enumerate(modules):
-    #     name = "i" + str(idx)
-    #     tensor = inception_module(input_tensor, filters, activation,
-    #                                                 lambda_regularization, name=name)
-
-    i2_tensor = inception_module(input_tensor1, filters, activation,
-                                                lambda_regularization, name="i1")
-
+    i1_tensor = inception_module(input_tensor1, filters, activation,
+                                                    lambda_regularization, name="i1")
 
     i2_tensor = inception_module(i1_tensor, filters, activation,
                                                     lambda_regularization, name="i2")
@@ -289,12 +283,12 @@ def create_dual_input_network(image_size, n_channels, filters,
                                 lambda_regularization, activation='elu'):
 
     # Create an instance of the inception model
-    inception_model = create_inception_subnetwork(image_size, n_channels, filters,
+    inception_model = create_inception_subnetwork(image_size, n_channels,
                                                     lambda_regularization, activation)
 
-    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels), name="input_1")
+    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels), name="input1")
 
-    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels), name="input_2")
+    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels), name="input2")
 
     # Use the model twice
     dense1 = inception_model(input_tensor1)
@@ -305,7 +299,7 @@ def create_dual_input_network(image_size, n_channels, filters,
 
     dense3_tensor = Dense(units=20, name = "D3")(concatenation_tensor)
 
-    output_tensor = Dense(units=3, activation='softmax', name = "output")(dense3_tensor)
+    output_tensor = Dense(units=1, activation='sigmoid', name = "output")(dense3_tensor)
 
     opt = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999,
                                     epsilon=None, decay=0.0, amsgrad=False)
