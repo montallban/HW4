@@ -33,7 +33,7 @@ def read_all_rotations(dirname, filebase):
     return results
 
 
-def visualizeExperiment(dirname, filebase, metric='categorical_accuracy'):
+def visualizeExperiment(dirname, filebase, metric='categorical_accuracy',title='Shallow Validation'):
     '''
     Generate the learning curves for a set of experiments for both the training and validation data sets.
     
@@ -43,11 +43,11 @@ def visualizeExperiment(dirname, filebase, metric='categorical_accuracy'):
          the validation set key is "val_"+metric
     '''
     results = read_all_rotations(dirname, filebase)
-    
+    print(results[0]['history'])
     #Training Results
     for i, r in enumerate(results):
         plt.plot(r['history'][metric], label='Model {:d}'.format(i+1))
-    plt.title('Training')
+        plt.title('Training')
     plt.xlabel('epochs')
     plt.ylabel('Accuracy')
     plt.legend(loc = 'lower right', prop={'size': 10})
@@ -56,9 +56,9 @@ def visualizeExperiment(dirname, filebase, metric='categorical_accuracy'):
     #Validation Results
     for i, r in enumerate(results):
         plt.plot(r['history']['val_' + metric], label='Model {:d}'.format(i+1))
-    plt.title('Validation')
+        plt.title("Validation")
     plt.xlabel('epochs')
-    plt.ylabel('Accuracy')
+    plt.ylabel('Categorical Accuracy')
     plt.legend(loc = 'lower right', prop={'size': 10})
     plt.show()
     
@@ -91,10 +91,21 @@ def visualizeConfusion(dirname, filebase, key_true='true_validation', key_predic
     
     auc = 0
     # Iterate over the results
-    for r in result:
+    for idx, r in enumerate(result):
+        title = "Model " + str(idx+1)
         # Compute AUC and the confusion matrix for each result
         preds_val = r[key_predict]
         outs_val = r[key_true]
         auc += metrics.multiclass_auc(outs_val, preds_val)
-        metrics.generate_confusion_matrix(outs_val, preds_val, ['scissors', 'mugs', 'glasses'])
+        metrics.generate_confusion_matrix(outs_val, preds_val, ['scissors', 'mugs', 'glasses'], title=title)
     print(auc / len(result))
+
+
+directory = r"C:\Users\User\AML\HW4\results_hw4"
+filebase =  "image_basic_inception_filters_10_[13,*_results.pkl"
+visualizeExperiment(directory, filebase)
+visualizeConfusion(directory, filebase)
+
+# filebase = "image_basic_network_deep_hidden_128_64_Csize_7_3_Cfilters_10_20_Pool_2_2_drop_0.50_L2_0.010000_ntrain_04_rot_*_results.pkl"
+# visualizeExperiment(directory,filebase,title='Deep Validation')
+# visualizeConfusion(directory, filebase)
