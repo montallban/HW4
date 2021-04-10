@@ -286,9 +286,9 @@ def create_dual_input_network(image_size, n_channels, filters,
     inception_model = create_inception_subnetwork(image_size, n_channels,
                                                     lambda_regularization, activation)
 
-    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels), name="input1")
+    input_tensor1 = Input(shape=(image_size[0], image_size[1], n_channels), name="input_1")
 
-    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels), name="input2")
+    input_tensor2 = Input(shape=(image_size[0], image_size[1], n_channels), name="input_2")
 
     # Use the model twice
     dense1 = inception_model(input_tensor1)
@@ -299,7 +299,7 @@ def create_dual_input_network(image_size, n_channels, filters,
 
     dense3_tensor = Dense(units=20, name = "D3")(concatenation_tensor)
 
-    output_tensor = Dense(units=1, activation='sigmoid', name = "output")(dense3_tensor)
+    output_tensor = Dense(units=3, activation='softmax', name = "output")(dense3_tensor)
 
     opt = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999,
                                     epsilon=None, decay=0.0, amsgrad=False)

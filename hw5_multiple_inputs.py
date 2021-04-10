@@ -144,9 +144,9 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
         # ins1 takes in the ith image while ins2 takes the i+10th image
         # to ensure they are of the same class, we mod bound
         # e.g. when i+9 > bound, ins2 appends the ith image
-        for i in np.arange(0,bound-10,1):
+        for i in np.arange(0,bound-30,1):
             ins1.append(ins_train[c][i])
-            ins2.append(ins_train[c][(i+9)%bound])
+            ins2.append(ins_train[c][(i+30)%bound])
         ins1_train.append(ins1)
         ins2_train.append(ins2)
 
@@ -155,7 +155,7 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
 
         # only take len(tmp) - 10 (all but 10 elements)
         tmp[:, c] = 1
-        outs_train.append(tmp[:(bound-10),:])
+        outs_train.append(tmp[:(bound-30),:])
 
         print('Train objects:', obj)
         
@@ -174,9 +174,9 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
         bound = len(ins_val[c])
 
         # same procedure as for ins1_train
-        for i in np.arange(0,bound-10,1):
+        for i in np.arange(0,bound-30,1):
             ins1.append(ins_val[c][i])
-            ins2.append(ins_val[c][(i+9)%bound])
+            ins2.append(ins_val[c][(i+30)%bound])
         # append to ins1_val and ins2_val
         ins1_val.append(ins1)
         ins2_val.append(ins2)
@@ -185,7 +185,7 @@ def load_data_sets(directory_base, args, objects=None, condition_list=None, file
         tmp = np.zeros((dat.shape[0], len(objects)))
         tmp[:, c] = 1; 
         # reduce outs_val by 10 to ensure it is the same length as input
-        outs_val.append(tmp[:-10,:])
+        outs_val.append(tmp[:-30,:])
     
     # Put the multi-fold training set together
     ins1_train = np.concatenate(ins1_train, axis=0)
@@ -222,7 +222,7 @@ def create_parser():
     parser.add_argument('-experiment_type', type=str, default="basic", help="Experiment type")
     parser.add_argument('-nogo', action='store_true', help='Do not perform the experiment')
     parser.add_argument('-batch', type=int, default=200, help="Training set batch size")
-    parser.add_argument('-filters',type=int,default=[10, [10,10], [10, 10], 10],help="Filters for inception module.")
+    parser.add_argument('-filters',type=int,default=[10, [16,16], [22, 22], 28],help="Filters for inception module.")
     
     return parser
 
